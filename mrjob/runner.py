@@ -14,10 +14,12 @@
 
 """Base class for all runners."""
 
+import bz2
 import copy
 import datetime
 import getpass
 import glob
+import gzip
 import logging
 import os
 import random
@@ -349,6 +351,21 @@ class MRJobRunner(object):
         assert self._ran_job
 
         for line in self._stream_output():
+            yield line
+
+    def cat(self, source_path):
+        """cat output from a source file. This would automatically decompress 
+        .gz and .bz2 files."""
+            
+        # decompress if .gz or .bz2 files found
+        if source_path.endswith('.bz2'):
+            f = bz2.BZ2File(source_path)
+        elif source_path.endswith('.gz'):
+            f = gzip.GzipFile(source_path)
+        else:
+            f = open(source_path)
+                
+        for line in f:
             yield line
 
     def _cleanup_scratch(self):
